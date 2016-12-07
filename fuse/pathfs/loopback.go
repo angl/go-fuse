@@ -11,8 +11,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/hanwen/go-fuse/fuse"
-	"github.com/hanwen/go-fuse/fuse/nodefs"
+	"github.com/angl/go-fuse/fuse"
+	"github.com/angl/go-fuse/fuse/nodefs"
 )
 
 type loopbackFileSystem struct {
@@ -148,7 +148,11 @@ func (fs *loopbackFileSystem) Mknod(name string, mode uint32, dev uint32, contex
 }
 
 func (fs *loopbackFileSystem) Mkdir(path string, mode uint32, context *fuse.Context) (code fuse.Status) {
-	return fuse.ToStatus(os.Mkdir(fs.GetPath(path), os.FileMode(mode)))
+	code = fuse.ToStatus(os.Mkdir(fs.GetPath(path), os.FileMode(mode)))
+	if code.Ok() && context != nil {
+		code = fuse.ToStatus(os.Chown(fs.GetPath(path), int(context.Uid), int(context.Gid)))
+	}
+	return code
 }
 
 // Don't use os.Remove, it removes twice (unlink followed by rmdir).
@@ -161,7 +165,11 @@ func (fs *loopbackFileSystem) Rmdir(name string, context *fuse.Context) (code fu
 }
 
 func (fs *loopbackFileSystem) Symlink(pointedTo string, linkName string, context *fuse.Context) (code fuse.Status) {
-	return fuse.ToStatus(os.Symlink(pointedTo, fs.GetPath(linkName)))
+	code = fuse.ToStatus(os.Symlink(pointedTo, fs.GetPath(linkName)))
+	if code.Ok() && context != nil {
+		code = fuse.ToStatus(os.Chown(fs.GetPath(linkName), int(context.Uid), int(context.Gid)))
+	}
+	return code
 }
 
 func (fs *loopbackFileSystem) Rename(oldPath string, newPath string, context *fuse.Context) (codee fuse.Status) {
@@ -170,7 +178,11 @@ func (fs *loopbackFileSystem) Rename(oldPath string, newPath string, context *fu
 }
 
 func (fs *loopbackFileSystem) Link(orig string, newName string, context *fuse.Context) (code fuse.Status) {
-	return fuse.ToStatus(os.Link(fs.GetPath(orig), fs.GetPath(newName)))
+	code = fuse.ToStatus(os.Link(fs.GetPath(orig), fs.GetPath(newName)))
+	if code.Ok() && context != nil {
+		code = fuse.ToStatus(os.Chown(fs.GetPath(newName), int(context.Uid), int(context.Gid)))
+	}
+	return code
 }
 
 func (fs *loopbackFileSystem) Access(name string, mode uint32, context *fuse.Context) (code fuse.Status) {
@@ -179,5 +191,8 @@ func (fs *loopbackFileSystem) Access(name string, mode uint32, context *fuse.Con
 
 func (fs *loopbackFileSystem) Create(path string, flags uint32, mode uint32, context *fuse.Context) (fuseFile nodefs.File, code fuse.Status) {
 	f, err := os.OpenFile(fs.GetPath(path), int(flags)|os.O_CREATE, os.FileMode(mode))
+	if err != nil && context != nil {
+		err = f.Chown(int(context.Uid), int(context.Gid))
+	}
 	return nodefs.NewLoopbackFile(f), fuse.ToStatus(err)
 }

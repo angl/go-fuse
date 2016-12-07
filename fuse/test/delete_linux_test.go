@@ -13,9 +13,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hanwen/go-fuse/fuse"
-	"github.com/hanwen/go-fuse/fuse/nodefs"
-	"github.com/hanwen/go-fuse/internal/testutil"
+	"github.com/angl/go-fuse/fuse"
+	"github.com/angl/go-fuse/fuse/nodefs"
+	"github.com/angl/go-fuse/internal/testutil"
 )
 
 type flipNode struct {

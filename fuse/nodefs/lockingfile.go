@@ -9,7 +9,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/hanwen/go-fuse/fuse"
+	"github.com/angl/go-fuse/fuse"
 )
 
 type lockingFile struct {

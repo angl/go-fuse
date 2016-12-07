@@ -11,8 +11,8 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/hanwen/go-fuse/fuse"
-	"github.com/hanwen/go-fuse/fuse/nodefs"
+	"github.com/angl/go-fuse/fuse"
+	"github.com/angl/go-fuse/fuse/nodefs"
 )
 
 func main() {

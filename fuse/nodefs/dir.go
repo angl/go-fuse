@@ -8,7 +8,7 @@ import (
 	"log"
 	"sync"
 
-	"github.com/hanwen/go-fuse/fuse"
+	"github.com/angl/go-fuse/fuse"
 )
 
 type connectorDir struct {

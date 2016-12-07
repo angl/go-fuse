@@ -16,9 +16,9 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/hanwen/go-fuse/fuse"
-	"github.com/hanwen/go-fuse/fuse/nodefs"
-	"github.com/hanwen/go-fuse/fuse/pathfs"
+	"github.com/angl/go-fuse/fuse"
+	"github.com/angl/go-fuse/fuse/nodefs"
+	"github.com/angl/go-fuse/fuse/pathfs"
 )
 
 func filePathHash(path string) string {
@@ -304,6 +304,11 @@ func (fs *unionFS) Promote(name string, srcResult branchResult, context *fuse.Co
 			mTime := srcResult.attr.ModTime()
 			code = writable.Utimens(name, &aTime, &mTime, context)
 		}
+		if code.Ok() {
+			uid := srcResult.attr.Uid
+			gid := srcResult.attr.Gid
+			code = writable.Chown(name, uid, gid, context)
+		}
 
 		files := fs.nodeFs.AllFiles(name, 0)
 		for _, fileWrapper := range files {
@@ -339,9 +344,19 @@ func (fs *unionFS) Promote(name string, srcResult branchResult, context *fuse.Co
 			log.Println("can't read link in source fs", name)
 		} else {
 			code = writable.Symlink(link, name, context)
+			if code.Ok() {
+				uid := srcResult.attr.Uid
+				gid := srcResult.attr.Gid
+				code = writable.Chown(name, uid, gid, context)
+			}
 		}
 	} else if srcResult.attr.IsDir() {
 		code = writable.Mkdir(name, srcResult.attr.Mode&07777|0200, context)
+		if code.Ok() {
+			uid := srcResult.attr.Uid
+			gid := srcResult.attr.Gid
+			code = writable.Chown(name, uid, gid, context)
+		}
 	} else {
 		log.Println("Unknown file type:", srcResult.attr)
 		return fuse.ENOSYS
@@ -659,6 +674,8 @@ func (fs *unionFS) promoteDirsTo(filename string) fuse.Status {
 		aTime := r.attr.AccessTime()
 		mTime := r.attr.ModTime()
 		fs.fileSystems[0].Utimens(d, &aTime, &mTime, nil)
+
+		fs.fileSystems[0].Chown(d, r.attr.Uid, r.attr.Gid, nil)
 		r.branch = 0
 		fs.setBranch(d, r)
 	}
