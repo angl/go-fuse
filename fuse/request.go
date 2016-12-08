@@ -147,6 +147,9 @@ func (r *request) parse() {
 	r.inHeader = (*InHeader)(unsafe.Pointer(&r.inputBuf[0]))
 	r.arg = r.inputBuf[:]
 
+        // For debugging
+        log.Printf("inData context %v", r.inHeader.Context)
+
 	r.handler = getHandler(r.inHeader.Opcode)
 	if r.handler == nil {
 		log.Printf("Unknown opcode %d", r.inHeader.Opcode)

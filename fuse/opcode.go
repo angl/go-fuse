@@ -292,6 +292,8 @@ func doMknod(server *Server, req *request) {
 
 func doMkdir(server *Server, req *request) {
 	out := (*EntryOut)(req.outData)
+        // For debugging
+        log.Printf("mkdir indata context: %v", ((*MkdirIn)(req.inData)).Context)
 	req.status = server.fileSystem.Mkdir((*MkdirIn)(req.inData), req.filenames[0], out)
 }
 
